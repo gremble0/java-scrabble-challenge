@@ -33,76 +33,73 @@ public class Scrabble {
         letterScores.put('y', 4);
         letterScores.put('z', 10);
     }
-    private int score = 0;
+    private String word;
     private Stack<Integer> multipliers = new Stack<>();
 
     public Scrabble(String word) {
         multipliers.push(1);
-        String wordLower = word.toLowerCase();
-        this.calculateScore(wordLower);
-        this.verifyNoMultiLetterMultipliers(wordLower);
+        this.word = word.toLowerCase();
     }
 
-    private void calculateScore(String word) {
+    // Only verifies there are no multiletter multipliers in the middle of the word,
+    // e.g. "he{ll}o"
+    private boolean verifyNoMultiLetterMultipliers() {
+        if (this.word.contains("{"))
+            return this.verifyNoMultiLetterDoubles();
+        else if (this.word.contains("["))
+            return this.verifyNoMultiLetterTriples();
+        else
+            return true;
+    }
+
+    private boolean verifyNoMultiLetterDoubles() {
+        int openingIndex = this.word.indexOf('{');
+        int closingIndex = this.word.indexOf('}');
+        if (openingIndex > 0 && closingIndex - openingIndex > 2)
+            return false;
+        else
+            return true;
+    }
+
+    private boolean verifyNoMultiLetterTriples() {
+        int openingIndex = word.indexOf('[');
+        int closingIndex = word.indexOf(']');
+        if (openingIndex > 0 && closingIndex - openingIndex > 2)
+            return false;
+        else
+            return true;
+    }
+
+    public int score() {
+        int score = 0;
         for (char c : word.toCharArray()) {
             if (c == '[') {
                 this.multipliers.push(3);
             } else if (c == ']') {
-                if (this.multipliers.pop() != 3) {
-                    this.score = 0;
-                    return;
-                }
+                if (this.multipliers.pop() != 3)
+                    return 0;
             } else if (c == '{') {
                 this.multipliers.push(2);
             } else if (c == '}') {
-                if (this.multipliers.pop() != 2) {
-                    this.score = 0;
-                    return;
-                }
+                if (this.multipliers.pop() != 2)
+                    return 0;
             } else {
                 int multiplier = 1;
                 for (Integer mul : this.multipliers)
                     multiplier *= mul;
                 Integer charScoreNoMultiplier = letterScores.get(c);
-                // Invalid character, score is 0
-                if (charScoreNoMultiplier == null) {
-                    this.score = 0;
-                    return;
-                }
-                this.score += charScoreNoMultiplier * multiplier;
+                // Invalid character
+                if (charScoreNoMultiplier == null)
+                    return 0;
+                score += charScoreNoMultiplier * multiplier;
             }
         }
 
         // Unclosed multiplier
-        if (this.multipliers.pop() != 1)
-            this.score = 0;
-    }
+        if (this.multipliers.pop() != 1 || !verifyNoMultiLetterMultipliers())
+            score = 0;
 
-    // Only verifies there are no multiletter multipliers in the middle of the word,
-    // e.g. "he{ll}o"
-    private void verifyNoMultiLetterMultipliers(String word) {
-        if (word.contains("{"))
-            this.verifyNoMultiLetterDoubles(word);
-        else if (word.contains("["))
-            this.verifyNoMultiLetterTriples(word);
-    }
-
-    private void verifyNoMultiLetterDoubles(String word) {
-        int openingIndex = word.indexOf('{');
-        int closingIndex = word.indexOf('}');
-        if (openingIndex > 0 && closingIndex - openingIndex > 2)
-            this.score = 0;
-    }
-
-    private void verifyNoMultiLetterTriples(String word) {
-        int openingIndex = word.indexOf('[');
-        int closingIndex = word.indexOf(']');
-        if (openingIndex > 0 && closingIndex - openingIndex > 2)
-            this.score = 0;
-    }
-
-    public int score() {
-        return this.score;
+        return score;
     }
 
 }
