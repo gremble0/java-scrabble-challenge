@@ -1,6 +1,7 @@
 package com.booleanuk;
 
 import java.util.HashMap;
+import java.util.Stack;
 
 public class Scrabble {
     private static HashMap<Character, Integer> letterScores = new HashMap<>();
@@ -33,17 +34,47 @@ public class Scrabble {
         letterScores.put('z', 10);
     }
     private int score = 0;
+    private Stack<Integer> multipliers = new Stack<>();
 
     public Scrabble(String word) {
+        multipliers.push(1);
         this.calculateScore(word);
     }
 
     private void calculateScore(String word) {
-        for (char c : word.toCharArray()) {
-            char cLower = Character.toLowerCase(c);
-            if (letterScores.containsKey(cLower))
-                this.score += letterScores.get(cLower);
+        // TODO: not lowercase whole string
+        String wordLower = word.toLowerCase();
+        for (char c : wordLower.toCharArray()) {
+            if (c == '[') {
+                this.multipliers.push(3);
+            } else if (c == ']') {
+                if (this.multipliers.pop() != 3) {
+                    this.score = 0;
+                    return;
+                }
+            } else if (c == '{') {
+                this.multipliers.push(2);
+            } else if (c == '}') {
+                if (this.multipliers.pop() != 2) {
+                    this.score = 0;
+                    return;
+                }
+            } else {
+                int multiplier = 1;
+                for (Integer mul : this.multipliers)
+                    multiplier *= mul;
+                Integer charScoreNoMultiplier = letterScores.get(c);
+                // Invalid character, score is 0
+                if (charScoreNoMultiplier == null) {
+                    this.score = 0;
+                    return;
+                }
+                this.score += charScoreNoMultiplier * multiplier;
+            }
         }
+
+        if (this.multipliers.pop() != 1)
+            this.score = 0;
     }
 
     public int score() {
