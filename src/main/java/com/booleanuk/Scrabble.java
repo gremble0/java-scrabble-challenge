@@ -38,13 +38,13 @@ public class Scrabble {
 
     public Scrabble(String word) {
         multipliers.push(1);
-        this.calculateScore(word);
+        String wordLower = word.toLowerCase();
+        this.calculateScore(wordLower);
+        this.verifyNoMultiLetterMultipliers(wordLower);
     }
 
     private void calculateScore(String word) {
-        // TODO: not lowercase whole string
-        String wordLower = word.toLowerCase();
-        for (char c : wordLower.toCharArray()) {
+        for (char c : word.toCharArray()) {
             if (c == '[') {
                 this.multipliers.push(3);
             } else if (c == ']') {
@@ -73,7 +73,31 @@ public class Scrabble {
             }
         }
 
+        // Unclosed multiplier
         if (this.multipliers.pop() != 1)
+            this.score = 0;
+    }
+
+    // Only verifies there are no multiletter multipliers in the middle of the word,
+    // e.g. "he{ll}o"
+    private void verifyNoMultiLetterMultipliers(String word) {
+        if (word.contains("{"))
+            this.verifyNoMultiLetterDoubles(word);
+        else if (word.contains("["))
+            this.verifyNoMultiLetterTriples(word);
+    }
+
+    private void verifyNoMultiLetterDoubles(String word) {
+        int openingIndex = word.indexOf('{');
+        int closingIndex = word.indexOf('}');
+        if (openingIndex > 0 && closingIndex - openingIndex > 2)
+            this.score = 0;
+    }
+
+    private void verifyNoMultiLetterTriples(String word) {
+        int openingIndex = word.indexOf('[');
+        int closingIndex = word.indexOf(']');
+        if (openingIndex > 0 && closingIndex - openingIndex > 2)
             this.score = 0;
     }
 
